@@ -9,10 +9,10 @@ ESP esp(&Serial, &debugPort, 4);
 MQTT mqtt(&esp);
 boolean wifiConnected = false;
 
-char * ssid = "Jamwal";
-char * passkey = "jamwal1953";
+char * ssid = "XT1033";
+char * passkey = "12345678";
 char * deviceName = "Neville Longbottom";
-char * mqttHost = "192.168.1.9";
+char * mqttHost = "192.168.43.11";
 int mqttPort = 1883;
 char * mqttUser = "";
 char * mqttPass = "";
@@ -20,7 +20,9 @@ char * mqttPass = "";
 const char * deviceId     = "sdFGHDjv7w6fd/sF=";
 const char * dataTopic    = "/device/sdFGHDjv7w6fd/sF=/data";
 const char * commandTopic = "/device/sdFGHDjv7w6fd/sF=/cmd";
-const char * baudrate - "19200";
+const char * baudrate = "19200";
+
+int ledPin = 13;
 
 void wifiCb(void* response)
 {
@@ -61,9 +63,16 @@ void mqttData(void* response)
   String topic = res.popString();
   debugPort.println(topic);
 
-  debugPort.print("data=");
   String data = res.popString();
   debugPort.println(data);
+
+  if(data.charAt(8) == 0) {
+    debugPort.print("Turning Off");
+    digitalWrite(ledPin, LOW);
+  } else {
+    debugPort.print("Turning On");
+    digitalWrite(ledPin, HIGH);
+  }
 
 }
 void mqttPublished(void* response)
@@ -72,6 +81,8 @@ void mqttPublished(void* response)
 }
 
 void setup() {
+  pinMode(ledPin, OUTPUT);
+  digitalWrite(ledPin, LOW);
   Serial.begin(19200);
   debugPort.begin(19200);
   esp.enable();
