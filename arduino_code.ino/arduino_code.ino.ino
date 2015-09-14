@@ -9,20 +9,24 @@ ESP esp(&Serial, &debugPort, 4);
 MQTT mqtt(&esp);
 boolean wifiConnected = false;
 
-char * ssid = "XT1033";
-char * passkey = "12345678";
+char * ssid = "ITI";
+char * passkey = "";
 char * deviceName = "Neville Longbottom";
-char * mqttHost = "192.168.43.11";
+char * mqttHost = "192.168.1.3";
 int mqttPort = 1883;
 char * mqttUser = "";
 char * mqttPass = "";
 
-const char * deviceId     = "sdFGHDjv7w6fd/sF=";
-const char * dataTopic    = "/device/sdFGHDjv7w6fd/sF=/data";
-const char * commandTopic = "/device/sdFGHDjv7w6fd/sF=/cmd";
+const char * deviceId     = "sdFGHDjv7w6fdsF";
+const char * dataTopic    = "/device/sdFGHDjv7w6fdsF/data";
+const char * commandTopic = "/device/sdFGHDjv7w6fdsF/cmd";
 const char * baudrate = "19200";
 
-int ledPin = 13;
+int relayPin = 5;
+
+#define RELAY(pin) pinMode(pin, OUTPUT)
+#define RELAY_OFF(pin) digitalWrite(relayPin, HIGH)
+#define RELAY_ON(pin) digitalWrite(relayPin, LOW)
 
 void wifiCb(void* response)
 {
@@ -68,10 +72,10 @@ void mqttData(void* response)
 
   if(data.charAt(8) == 0) {
     debugPort.print("Turning Off");
-    digitalWrite(ledPin, LOW);
+    RELAY_OFF(relayPin);
   } else {
     debugPort.print("Turning On");
-    digitalWrite(ledPin, HIGH);
+    RELAY_ON(relayPin);
   }
 
 }
@@ -81,8 +85,9 @@ void mqttPublished(void* response)
 }
 
 void setup() {
-  pinMode(ledPin, OUTPUT);
-  digitalWrite(ledPin, LOW);
+  RELAY(relayPin);
+  RELAY_OFF(relayPin);
+  
   Serial.begin(19200);
   debugPort.begin(19200);
   esp.enable();
