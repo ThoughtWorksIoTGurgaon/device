@@ -24,9 +24,45 @@ const char * baudrate = "19200";
 
 int relayPin = 5;
 
+struct service_data {
+  unsigned char address;
+  unsigned char length;
+  unsigned char data;
+};
+
+struct packet {
+  unsigned char version;
+  unsigned char type;
+  unsigned char unused[3];
+  unsigned char count;
+  unsigned char * raw_data;
+} ;
+
+
 #define RELAY(pin) pinMode(pin, OUTPUT)
 #define RELAY_OFF(pin) digitalWrite(relayPin, HIGH)
 #define RELAY_ON(pin) digitalWrite(relayPin, LOW)
+
+void processServiceMessage(struct service_data * serv) {
+  if(serv->data == 0) {
+    debugPort.print("Turning Off");
+    RELAY_OFF(relayPin);
+  } else {
+    debugPort.print("Turning On");
+    RELAY_ON(relayPin);
+  }
+}
+
+void processMessage(struct packet * pack) {
+  unsigned char count = pack->count;
+  unsigned char * data = pack -> raw_data;
+  struct service_data *serv = (struct service_data* ) data;
+  
+  while(count -- > 0) {
+    processServiceMessage(serv);
+    data = data + 1 + serv->length;
+  }
+}
 
 void wifiCb(void* response)
 {
@@ -70,14 +106,8 @@ void mqttData(void* response)
   String data = res.popString();
   debugPort.println(data);
 
-  if(data.charAt(8) == 0) {
-    debugPort.print("Turning Off");
-    RELAY_OFF(relayPin);
-  } else {
-    debugPort.print("Turning On");
-    RELAY_ON(relayPin);
-  }
-
+  processMessage((struct packet *)data.c_str());
+  
 }
 void mqttPublished(void* response)
 {
